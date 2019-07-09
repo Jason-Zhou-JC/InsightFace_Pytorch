@@ -48,23 +48,33 @@ def get_train_loader(conf):
     loader = DataLoader(ds, batch_size=conf.batch_size, shuffle=True, pin_memory=conf.pin_memory, num_workers=conf.num_workers)
     return loader, class_num 
     
-def load_bin(path, rootdir, transform, image_size=[112,112]):
-    if not rootdir.exists():
-        rootdir.mkdir()
-    bins, issame_list = pickle.load(open(path, 'rb'), encoding='bytes')
-    data = bcolz.fill([len(bins), 3, image_size[0], image_size[1]], dtype=np.float32, rootdir=rootdir, mode='w')
+def load_bin(path, rootdir, transform, img_path=None, image_size=[112,112]):
+    # if not rootdir.exists():
+        # rootdir.mkdir()
+    if img_path is None:
+        img_path=rootdir
+    if not img_path.exists():
+        img_path.mkdir()
+    # bins, issame_list = pickle.load(open(path, 'rb'), encoding='bytes')
+    bins, issame_list = pickle.load(open(str(path), 'rb'))
+    # data = bcolz.fill([len(bins), 3, image_size[0], image_size[1]], dtype=np.float32, rootdir=rootdir, mode='w')
     for i in range(len(bins)):
         _bin = bins[i]
         img = mx.image.imdecode(_bin).asnumpy()
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-        img = Image.fromarray(img.astype(np.uint8))
-        data[i, ...] = transform(img)
+        # img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        # img = Image.fromarray(img.astype(np.uint8))
+        img = Image.fromarray(img)
+        group_path = img_path/str(i/1200)
+        if not group_path.exists():
+            group_path.mkdir()
+        img.save(group_path/'{:04d}.jpg'.format(i%1200+1), quality=100)
+        # data[i, ...] = transform(img)
         i += 1
         if i % 1000 == 0:
             print('loading bin', i)
-    print(data.shape)
-    np.save(str(rootdir)+'_list', np.array(issame_list))
-    return data, issame_list
+    # print(data.shape)
+    # np.save(str(rootdir)+'_list', np.array(issame_list))
+    # return data, issame_list
 
 def get_val_pair(path, name):
     carray = bcolz.carray(rootdir = path/name, mode='r')
@@ -77,8 +87,9 @@ def get_val_data(data_path):
     lfw, lfw_issame = get_val_pair(data_path, 'lfw')
     return agedb_30, cfp_fp, lfw, agedb_30_issame, cfp_fp_issame, lfw_issame
 
-def load_mx_rec(rec_path):
-    save_path = rec_path/'imgs'
+def load_mx_rec(rec_path, save_path=None, bias=0):
+    if save_path is None:
+        save_path = rec_path/'imgs'
     if not save_path.exists():
         save_path.mkdir()
     imgrec = mx.recordio.MXIndexedRecordIO(str(rec_path/'train.idx'), str(rec_path/'train.rec'), 'r')
@@ -88,12 +99,14 @@ def load_mx_rec(rec_path):
     for idx in tqdm(range(1,max_idx)):
         img_info = imgrec.read_idx(idx)
         header, img = mx.recordio.unpack_img(img_info)
-        label = int(header.label)
-        img = Image.fromarray(img)
-        label_path = save_path/str(label)
+        label = int(header.label) + bias
+        # label = int(header.label[0]) + bias
+        img = Image.fromarray(img[:, :, ::-1])
+        # label_path = save_path/str(label)
+        label_path = save_path/'{:07d}'.format(label)
         if not label_path.exists():
             label_path.mkdir()
-        img.save(label_path/'{}.jpg'.format(idx), quality=95)
+        img.save(label_path/'{}.jpg'.format(idx), quality=100)
 
 # class train_dataset(Dataset):
 #     def __init__(self, imgs_bcolz, label_bcolz, h_flip=True):
