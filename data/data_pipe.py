@@ -103,7 +103,7 @@ def load_mx_rec(rec_path, save_path=None, bias=0):
         # label = int(header.label[0]) + bias
         img = Image.fromarray(img[:, :, ::-1])
         # label_path = save_path/str(label)
-        label_path = save_path/'{:07d}'.format(label)
+        label_path = save_path/'{:06d}'.format(label)
         if not label_path.exists():
             label_path.mkdir()
         img.save(label_path/'{}.jpg'.format(idx), quality=100)
