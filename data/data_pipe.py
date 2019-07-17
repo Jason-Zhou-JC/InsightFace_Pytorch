@@ -5,6 +5,7 @@ from torchvision.datasets import ImageFolder
 from PIL import Image, ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 import numpy as np
+import math
 import cv2
 import bcolz
 import pickle
@@ -55,8 +56,8 @@ def load_bin(path, rootdir, transform, img_path=None, image_size=[112,112]):
         img_path=rootdir
     if not img_path.exists():
         img_path.mkdir()
-    # bins, issame_list = pickle.load(open(path, 'rb'), encoding='bytes')
-    bins, issame_list = pickle.load(open(str(path), 'rb'))
+    bins, issame_list = pickle.load(open(path, 'rb'), encoding='bytes')
+    # bins, issame_list = pickle.load(open(str(path), 'rb'))
     # data = bcolz.fill([len(bins), 3, image_size[0], image_size[1]], dtype=np.float32, rootdir=rootdir, mode='w')
     for i in range(len(bins)):
         _bin = bins[i]
@@ -64,7 +65,7 @@ def load_bin(path, rootdir, transform, img_path=None, image_size=[112,112]):
         # img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         # img = Image.fromarray(img.astype(np.uint8))
         img = Image.fromarray(img)
-        group_path = img_path/str(i/1200)
+        group_path = img_path/str(math.floor(i/1200))
         if not group_path.exists():
             group_path.mkdir()
         img.save(group_path/'{:04d}.jpg'.format(i%1200+1), quality=100)

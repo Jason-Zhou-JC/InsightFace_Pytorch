@@ -5,9 +5,9 @@ import argparse
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='for face verification')
-    parser.add_argument("-r", "--rec_path", help="mxnet record file path",default='faces_emore', type=str)
-    parser.add_argument("-s", "--save_path", help="save path", default='/data/MS-Celeb-1M/faces_emore_112x112', type=str)
-    parser.add_argument("-i", "--img_path", help="img path", default='/data/LFW/', type=str)
+    parser.add_argument("-r", "--rec_path", help="mxnet record file path",default='faces_webface', type=str)
+    parser.add_argument("-s", "--save_path", help="save path", default='/home/jason/Datasets/InsightFace/faces_webface_112x112', type=str)
+    parser.add_argument("-i", "--img_path", help="img path", default='/home/jason/Datasets/InsightFace', type=str)
 
     args = parser.parse_args()
     conf = get_config()
